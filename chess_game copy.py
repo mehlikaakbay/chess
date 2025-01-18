@@ -5,7 +5,7 @@ import sys
 pygame.init()
 
 # Screen dimensions and colors
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 800
+SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 800  # Increased width for captured pieces display
 PRISTINE, DARK_RED = (242, 232, 218), (14, 22, 39)
 HIGHLIGHT_COLOR = (200, 200, 0)
 
@@ -45,6 +45,10 @@ START_BOARD = [
 selected_piece = None
 selected_position = None
 current_turn = "w"  # White moves first
+
+# Captured pieces
+captured_white = []
+captured_black = []
 
 # Screen setup
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -91,6 +95,25 @@ def draw_pieces(board):
             piece = board[row][col]
             if piece:
                 screen.blit(PIECES[piece], (col * 100, row * 100))
+
+
+# Function to draw captured pieces
+def draw_captured_pieces():
+    # Define positions for captured pieces
+    white_start_x, white_start_y = 820, 50
+    black_start_x, black_start_y = 820, 450
+
+    # Draw captured white pieces
+    for i, piece in enumerate(captured_white):
+        x = white_start_x + (i % 2) * 50
+        y = white_start_y + (i // 2) * 50
+        screen.blit(PIECES[piece], (x, y))
+
+    # Draw captured black pieces
+    for i, piece in enumerate(captured_black):
+        x = black_start_x + (i % 2) * 50
+        y = black_start_y + (i // 2) * 50
+        screen.blit(PIECES[piece], (x, y))
 
 
 # Function to handle piece movement validation
@@ -193,6 +216,7 @@ def game_loop():
 
         draw_board_with_highlight(valid_moves)
         draw_pieces(board)
+        draw_captured_pieces()  # Draw captured pieces
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -205,13 +229,20 @@ def game_loop():
                 # Select or move piece
                 if selected_piece:
                     if valid_move(selected_piece, selected_position, (row, col), board):
-                        # Check if destination is not occupied by same colored piece
-                        if board[row][col] == "" or board[row][col][0] != selected_piece[0]:
-                            board[row][col] = selected_piece
-                            board[selected_position[0]][selected_position[1]] = ""
-                            selected_piece = None
-                            current_turn = "b" if current_turn == "w" else "w"
-                            valid_moves = []
+                        # Check if destination is occupied by an opponent's piece
+                        if board[row][col] and board[row][col][0] != selected_piece[0]:
+                            captured_piece = board[row][col]
+                            if captured_piece[0] == "w":
+                                captured_white.append(captured_piece)
+                            else:
+                                captured_black.append(captured_piece)
+
+                        # Move the selected piece to the new square
+                        board[row][col] = selected_piece
+                        board[selected_position[0]][selected_position[1]] = ""
+                        selected_piece = None
+                        current_turn = "b" if current_turn == "w" else "w"
+                        valid_moves = []
                     else:
                         selected_piece = None
                         valid_moves = []
