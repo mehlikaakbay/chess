@@ -25,7 +25,6 @@ PIECES = {
     "bK": pygame.image.load("assets/bK.png"),
 }
 
-
 # Resize pieces to fit the board squares
 for key in PIECES:
     PIECES[key] = pygame.transform.scale(PIECES[key], (100, 100))
@@ -52,8 +51,18 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Chess Game")
 
 
+# Function to calculate valid moves for a selected piece
+def calculate_valid_moves(piece, position, board):
+    valid_moves = []
+    for r in range(8):
+        for c in range(8):
+            if valid_move(piece, position, (r, c), board):
+                valid_moves.append((r, c))
+    return valid_moves
+
+
 # Function to draw the board with highlighting
-def draw_board_with_highlight():
+def draw_board_with_highlight(valid_moves=None):
     # Get mouse position
     mouse_pos = pygame.mouse.get_pos()
     hover_col = mouse_pos[0] // 100
@@ -64,10 +73,15 @@ def draw_board_with_highlight():
             color = PRISTINE if (row + col) % 2 == 0 else DARK_RED
             pygame.draw.rect(screen, color, pygame.Rect(col * 100, row * 100, 100, 100))
 
+            if valid_moves and (row, col) in valid_moves:
+                # Highlight valid move squares
+                highlight_rect = pygame.Rect(col * 100, row * 100, 100, 100)
+                pygame.draw.rect(screen, HIGHLIGHT_COLOR, highlight_rect, 5)  # 5px border width
+
             if row == hover_row and col == hover_col:
                 # Draw a border around the square the mouse is hovering over
                 border_rect = pygame.Rect(col * 100, row * 100, 100, 100)
-                pygame.draw.rect(screen, HIGHLIGHT_COLOR, border_rect, 5)  # 5px border width
+                pygame.draw.rect(screen, (255, 255, 0), border_rect, 3)  # Yellow hover border
 
 
 # Function to draw pieces
@@ -84,6 +98,10 @@ def valid_move(piece, start, end, board):
     row_start, col_start = start
     row_end, col_end = end
     selected_piece = piece[1]  # Exclude color from piece code (e.g., wP, bP)
+
+    # Prevent moving to a square occupied by the same color piece
+    if board[row_end][col_end] and board[row_end][col_end][0] == piece[0]:
+        return False
 
     # Pawn movement
     if selected_piece == "P":
@@ -102,19 +120,21 @@ def valid_move(piece, start, end, board):
     # Rook movement
     elif selected_piece == "R":
         if col_start == col_end:  # Vertical move
-            for i in range(min(row_start, row_end) + 1, max(row_start, row_end)):
+            step = 1 if row_end > row_start else -1
+            for i in range(row_start + step, row_end, step):
                 if board[i][col_start]:
                     return False
             return True
         elif row_start == row_end:  # Horizontal move
-            for i in range(min(col_start, col_end) + 1, max(col_start, col_end)):
+            step = 1 if col_end > col_start else -1
+            for i in range(col_start + step, col_end, step):
                 if board[row_start][i]:
                     return False
             return True
     # Knight movement (L-shape)
     elif selected_piece == "N":
-        if abs(row_start - row_end) == 2 and abs(col_start - col_end) == 1 or abs(row_start - row_end) == 1 and abs(
-                col_start - col_end) == 2:
+        if (abs(row_start - row_end) == 2 and abs(col_start - col_end) == 1) or \
+           (abs(row_start - row_end) == 1 and abs(col_start - col_end) == 2):
             return True
     # Bishop movement
     elif selected_piece == "B":
@@ -131,12 +151,14 @@ def valid_move(piece, start, end, board):
     # Queen movement (Rook + Bishop)
     elif selected_piece == "Q":
         if col_start == col_end:  # Vertical move
-            for i in range(min(row_start, row_end) + 1, max(row_start, row_end)):
+            step = 1 if row_end > row_start else -1
+            for i in range(row_start + step, row_end, step):
                 if board[i][col_start]:
                     return False
             return True
         elif row_start == row_end:  # Horizontal move
-            for i in range(min(col_start, col_end) + 1, max(col_start, col_end)):
+            step = 1 if col_end > col_start else -1
+            for i in range(col_start + step, col_end, step):
                 if board[row_start][i]:
                     return False
             return True
@@ -158,57 +180,18 @@ def valid_move(piece, start, end, board):
     return False
 
 
-# Function to check for check
-def is_in_check(board, player):
-    # Simplified check: check if the player's king is under attack
-    king_pos = None
-    for row in range(8):
-        for col in range(8):
-            piece = board[row][col]
-            if piece and piece[1] == "K" and piece[0] == player:
-                king_pos = (row, col)
-                break
-    if king_pos is None:
-        return False
-
-    # Check if any opponent piece can attack the king
-    for row in range(8):
-        for col in range(8):
-            piece = board[row][col]
-            if piece and piece[0] != player:
-                if valid_move(piece, (row, col), king_pos, board):
-                    return True
-    return False
-
-
-# Function to check for checkmate
-def is_checkmate(board, player):
-    if not is_in_check(board, player):
-        return False
-
-    # Check if the player can make any valid move
-    for row in range(8):
-        for col in range(8):
-            piece = board[row][col]
-            if piece and piece[0] == player:
-                for r in range(8):
-                    for c in range(8):
-                        if valid_move(piece, (row, col), (r, c), board):
-                            return False
-    return True
-
-
 # Game loop
 def game_loop():
     global selected_piece, selected_position, current_turn
 
     board = START_BOARD
     running = True
+    valid_moves = []
 
     while running:
         screen.fill((0, 0, 0))
 
-        draw_board_with_highlight()
+        draw_board_with_highlight(valid_moves)
         draw_pieces(board)
 
         for event in pygame.event.get():
@@ -228,33 +211,14 @@ def game_loop():
                             board[selected_position[0]][selected_position[1]] = ""
                             selected_piece = None
                             current_turn = "b" if current_turn == "w" else "w"
+                            valid_moves = []
                     else:
                         selected_piece = None
+                        valid_moves = []
                 elif piece and piece[0] == current_turn:
                     selected_piece = piece
                     selected_position = (row, col)
-
-        # Check for check and checkmate
-        if is_in_check(board, current_turn):
-            print(f"{current_turn} is in check!")
-            if is_checkmate(board, current_turn):
-                print(f"{current_turn} is in checkmate!")
-                running = False
-
-        # Check for King capture
-        white_king = False
-        black_king = False
-        for row in range(8):
-            for col in range(8):
-                piece = board[row][col]
-                if piece == "wK":
-                    white_king = True
-                elif piece == "bK":
-                    black_king = True
-
-        if not white_king or not black_king:
-            print("Game Over! King captured.")
-            running = False
+                    valid_moves = calculate_valid_moves(selected_piece, selected_position, board)
 
         pygame.display.flip()
 
