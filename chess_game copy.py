@@ -5,7 +5,7 @@ import sys
 pygame.init()
 
 # Screen dimensions and colors
-SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 800  # Increased width for captured pieces display
+SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 800
 PRISTINE, DARK_RED = (242, 232, 218), (14, 22, 39)
 HIGHLIGHT_COLOR = (200, 200, 0)
 
@@ -44,7 +44,7 @@ START_BOARD = [
 # Game state variables
 selected_piece = None
 selected_position = None
-current_turn = "w"  # White moves first
+current_turn = "w"
 
 # Captured pieces
 captured_white = []
@@ -61,13 +61,50 @@ def calculate_valid_moves(piece, position, board):
     for r in range(8):
         for c in range(8):
             if valid_move(piece, position, (r, c), board):
-                valid_moves.append((r, c))
+                temp_board = [row[:] for row in board]
+                temp_board[r][c] = piece
+                temp_board[position[0]][position[1]] = ""
+                if is_king_safe(temp_board, piece[0]):
+                    valid_moves.append((r, c))
     return valid_moves
+
+
+# Function to check if the king is safe
+def is_king_safe(board, color):
+    king_position = None
+    for row in range(8):
+        for col in range(8):
+            if board[row][col] == color + "K":
+                king_position = (row, col)
+                break
+    if not king_position:
+        return False
+
+    opponent_color = "b" if color == "w" else "w"
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+            if piece and piece[0] == opponent_color:
+                if valid_move(piece, (row, col), king_position, board):
+                    return False
+    return True
+
+
+# Function to check game status
+def check_game_status(board, color):
+    king_safe = is_king_safe(board, color)
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+            if piece and piece[0] == color:
+                valid_moves = calculate_valid_moves(piece, (row, col), board)
+                if valid_moves:
+                    return "continue"
+    return "checkmate" if not king_safe else "stalemate"
 
 
 # Function to draw the board with highlighting
 def draw_board_with_highlight(valid_moves=None):
-    # Get mouse position
     mouse_pos = pygame.mouse.get_pos()
     hover_col = mouse_pos[0] // 100
     hover_row = mouse_pos[1] // 100
@@ -78,14 +115,12 @@ def draw_board_with_highlight(valid_moves=None):
             pygame.draw.rect(screen, color, pygame.Rect(col * 100, row * 100, 100, 100))
 
             if valid_moves and (row, col) in valid_moves:
-                # Highlight valid move squares
                 highlight_rect = pygame.Rect(col * 100, row * 100, 100, 100)
-                pygame.draw.rect(screen, HIGHLIGHT_COLOR, highlight_rect, 5)  # 5px border width
+                pygame.draw.rect(screen, HIGHLIGHT_COLOR, highlight_rect, 5)
 
             if row == hover_row and col == hover_col:
-                # Draw a border around the square the mouse is hovering over
                 border_rect = pygame.Rect(col * 100, row * 100, 100, 100)
-                pygame.draw.rect(screen, (255, 255, 0), border_rect, 3)  # Yellow hover border
+                pygame.draw.rect(screen, (255, 255, 0), border_rect, 3)
 
 
 # Function to draw pieces
@@ -99,17 +134,14 @@ def draw_pieces(board):
 
 # Function to draw captured pieces
 def draw_captured_pieces():
-    # Define positions for captured pieces
     white_start_x, white_start_y = 820, 50
     black_start_x, black_start_y = 820, 450
 
-    # Draw captured white pieces
     for i, piece in enumerate(captured_white):
         x = white_start_x + (i % 2) * 50
         y = white_start_y + (i // 2) * 50
         screen.blit(PIECES[piece], (x, y))
 
-    # Draw captured black pieces
     for i, piece in enumerate(captured_black):
         x = black_start_x + (i % 2) * 50
         y = black_start_y + (i // 2) * 50
@@ -120,46 +152,41 @@ def draw_captured_pieces():
 def valid_move(piece, start, end, board):
     row_start, col_start = start
     row_end, col_end = end
-    selected_piece = piece[1]  # Exclude color from piece code (e.g., wP, bP)
+    selected_piece = piece[1]
 
-    # Prevent moving to a square occupied by the same color piece
     if board[row_end][col_end] and board[row_end][col_end][0] == piece[0]:
         return False
 
-    # Pawn movement
     if selected_piece == "P":
         direction = -1 if piece[0] == "w" else 1
-        # Normal move (one square forward)
         if col_start == col_end and board[row_end][col_end] == "" and row_end == row_start + direction:
             return True
-        # Initial move (two squares forward)
         if col_start == col_end and board[row_end][col_end] == "" and row_end == row_start + 2 * direction and (
                 row_start == 1 or row_start == 6):
             return True
-        # Capturing move (diagonal, one square)
         if abs(col_end - col_start) == 1 and row_end == row_start + direction and board[row_end][col_end] and \
                 board[row_end][col_end][0] != piece[0]:
             return True
-    # Rook movement
+
     elif selected_piece == "R":
-        if col_start == col_end:  # Vertical move
+        if col_start == col_end:
             step = 1 if row_end > row_start else -1
             for i in range(row_start + step, row_end, step):
                 if board[i][col_start]:
                     return False
             return True
-        elif row_start == row_end:  # Horizontal move
+        elif row_start == row_end:
             step = 1 if col_end > col_start else -1
             for i in range(col_start + step, col_end, step):
                 if board[row_start][i]:
                     return False
             return True
-    # Knight movement (L-shape)
+
     elif selected_piece == "N":
         if (abs(row_start - row_end) == 2 and abs(col_start - col_end) == 1) or \
            (abs(row_start - row_end) == 1 and abs(col_start - col_end) == 2):
             return True
-    # Bishop movement
+
     elif selected_piece == "B":
         if abs(row_start - row_end) == abs(col_start - col_end):
             r_step = 1 if row_end > row_start else -1
@@ -171,21 +198,21 @@ def valid_move(piece, start, end, board):
                 r += r_step
                 c += c_step
             return True
-    # Queen movement (Rook + Bishop)
+
     elif selected_piece == "Q":
-        if col_start == col_end:  # Vertical move
+        if col_start == col_end:
             step = 1 if row_end > row_start else -1
             for i in range(row_start + step, row_end, step):
                 if board[i][col_start]:
                     return False
             return True
-        elif row_start == row_end:  # Horizontal move
+        elif row_start == row_end:
             step = 1 if col_end > col_start else -1
             for i in range(col_start + step, col_end, step):
                 if board[row_start][i]:
                     return False
             return True
-        elif abs(row_start - row_end) == abs(col_start - col_end):  # Diagonal move
+        elif abs(row_start - row_end) == abs(col_start - col_end):
             r_step = 1 if row_end > row_start else -1
             c_step = 1 if col_end > col_start else -1
             r, c = row_start + r_step, col_start + c_step
@@ -195,7 +222,7 @@ def valid_move(piece, start, end, board):
                 r += r_step
                 c += c_step
             return True
-    # King movement
+
     elif selected_piece == "K":
         if abs(row_start - row_end) <= 1 and abs(col_start - col_end) <= 1:
             return True
@@ -216,7 +243,7 @@ def game_loop():
 
         draw_board_with_highlight(valid_moves)
         draw_pieces(board)
-        draw_captured_pieces()  # Draw captured pieces
+        draw_captured_pieces()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -224,12 +251,16 @@ def game_loop():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 col = event.pos[0] // 100
                 row = event.pos[1] // 100
-                piece = board[row][col]
 
-                # Select or move piece
+                if 0 <= col < 8 and 0 <= row < 8:
+                    piece = board[row][col]
+                else:
+                    selected_piece = None
+                    valid_moves = []
+                    continue
+
                 if selected_piece:
                     if valid_move(selected_piece, selected_position, (row, col), board):
-                        # Check if destination is occupied by an opponent's piece
                         if board[row][col] and board[row][col][0] != selected_piece[0]:
                             captured_piece = board[row][col]
                             if captured_piece[0] == "w":
@@ -237,12 +268,20 @@ def game_loop():
                             else:
                                 captured_black.append(captured_piece)
 
-                        # Move the selected piece to the new square
                         board[row][col] = selected_piece
                         board[selected_position[0]][selected_position[1]] = ""
                         selected_piece = None
-                        current_turn = "b" if current_turn == "w" else "w"
                         valid_moves = []
+
+                        game_status = check_game_status(board, "b" if current_turn == "w" else "w")
+                        if game_status == "checkmate":
+                            print(f"Checkmate! {current_turn.upper()} wins!")
+                            running = False
+                        elif game_status == "stalemate":
+                            print("Stalemate! The game is a draw!")
+                            running = False
+
+                        current_turn = "b" if current_turn == "w" else "w"
                     else:
                         selected_piece = None
                         valid_moves = []
