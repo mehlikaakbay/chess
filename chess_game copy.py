@@ -147,6 +147,25 @@ def draw_captured_pieces():
         y = black_start_y + (i // 2) * 50
         screen.blit(PIECES[piece], (x, y))
 
+# Function to draw move history
+def draw_move_history(history):
+    font = pygame.font.Font(None, 30)
+    x, y = 820, 100
+    screen.blit(font.render("Move History:", True, (255, 255, 255)), (x, 50))
+    for i, move in enumerate(history[-10:]):
+        text = font.render(move, True, (255, 255, 255))
+        screen.blit(text, (x, y + i * 30))
+
+
+# Function to draw player information
+def draw_player_info(current_turn):
+    font = pygame.font.Font(None, 40)
+    white_text = font.render("White Player", True, (255, 255, 255))
+    black_text = font.render("Black Player", True, (255, 255, 255))
+    turn_text = font.render(f"Current Turn: {'White' if current_turn == 'w' else 'Black'}", True, (255, 255, 0))
+    screen.blit(white_text, (50, 10))
+    screen.blit(black_text, (50, 40))
+    screen.blit(turn_text, (350, 10))
 
 # Function to handle piece movement validation
 def valid_move(piece, start, end, board):
