@@ -146,6 +146,38 @@ def draw_captured_pieces():
         x = black_start_x + (i % 2) * 50
         y = black_start_y + (i // 2) * 50
         screen.blit(PIECES[piece], (x, y))
+# Function to highlight the king if it's in check
+def highlight_king_in_check(board, color):
+    if not is_king_safe(board, color):
+        # Find the king's position
+        for row in range(8):
+            for col in range(8):
+                if board[row][col] == color + "K":
+                    # Highlight the king's position
+                    highlight_rect = pygame.Rect(col * 100, row * 100, 100, 100)
+                    pygame.draw.rect(screen, (255, 0, 0), highlight_rect, 5)  # Red border for check
+
+def draw_board_with_highlight(valid_moves=None):
+    mouse_pos = pygame.mouse.get_pos()
+    hover_col = mouse_pos[0] // 100
+    hover_row = mouse_pos[1] // 100
+
+    for row in range(8):
+        for col in range(8):
+            color = PRISTINE if (row + col) % 2 == 0 else DARK_RED
+            pygame.draw.rect(screen, color, pygame.Rect(col * 100, row * 100, 100, 100))
+
+            if valid_moves and (row, col) in valid_moves:
+                highlight_rect = pygame.Rect(col * 100, row * 100, 100, 100)
+                pygame.draw.rect(screen, HIGHLIGHT_COLOR, highlight_rect, 5)
+
+            if row == hover_row and col == hover_col:
+                border_rect = pygame.Rect(col * 100, row * 100, 100, 100)
+                pygame.draw.rect(screen, (255, 255, 0), border_rect, 3)
+
+    # Highlight kings in check
+    highlight_king_in_check(START_BOARD, "w")  # Check for white king
+    highlight_king_in_check(START_BOARD, "b")  # Check for black king
 
 # Function to draw move history
 def draw_move_history(history):
@@ -166,6 +198,43 @@ def draw_player_info(current_turn):
     screen.blit(white_text, (50, 10))
     screen.blit(black_text, (50, 40))
     screen.blit(turn_text, (350, 10))
+
+# Function to display the game-ending message on top of the board
+def display_game_end_message(message, board):
+    max_font_size = 100
+    min_font_size = 30
+    font_size = max_font_size
+    board_width = 800  # Chessboard width
+
+    # Reduce font size until the text fits within the chessboard
+    while font_size >= min_font_size:
+        font = pygame.font.Font(None, font_size)
+        text = font.render(message, True, (255, 0, 0))  # Render the text in red color
+        text_rect = text.get_rect(center=(board_width // 2, SCREEN_HEIGHT // 2))
+        if text_rect.width <= board_width - 20:  # Ensure text fits within the chessboard
+            break
+        font_size -= 5  # Decrease font size if text doesn't fit
+
+    # Display the board and the message
+    draw_board_with_highlight()  # Draw the chessboard
+    draw_pieces(board)  # Draw the pieces on the board
+    screen.blit(text, text_rect)  # Display the message
+    pygame.display.flip()
+
+    # Wait for user interaction
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                waiting = False
+
+# Function to draw the current turn information in the center of the black area
+def draw_current_turn(current_turn):
+    font = pygame.font.Font(None, 50)  # Font and size for the text
+    turn_text = f"{'White' if current_turn == 'w' else 'Black'}'s Turn"  # Determine the player's turn
+    text = font.render(turn_text, True, (255, 255, 255))  # Render the text in white color
+    text_rect = text.get_rect(center=(900, SCREEN_HEIGHT // 2))  # Center the text in the black sidebar
+    screen.blit(text, text_rect)  # Draw the text
 
 # Function to handle piece movement validation
 def valid_move(piece, start, end, board):
@@ -248,7 +317,6 @@ def valid_move(piece, start, end, board):
 
     return False
 
-
 # Game loop
 def game_loop():
     global selected_piece, selected_position, current_turn
@@ -262,6 +330,7 @@ def game_loop():
 
         draw_board_with_highlight(valid_moves)
         draw_pieces(board)
+        draw_current_turn(current_turn)  # Display the current player's turn
         draw_captured_pieces()
 
         for event in pygame.event.get():
@@ -294,10 +363,11 @@ def game_loop():
 
                         game_status = check_game_status(board, "b" if current_turn == "w" else "w")
                         if game_status == "checkmate":
-                            print(f"Checkmate! {current_turn.upper()} wins!")
+                            winner = "White" if current_turn == "w" else "Black"
+                            display_game_end_message(f"Checkmate! {winner} is victorious!", board)
                             running = False
                         elif game_status == "stalemate":
-                            print("Stalemate! The game is a draw!")
+                            display_game_end_message("Stalemate! The game is a draw!", board)
                             running = False
 
                         current_turn = "b" if current_turn == "w" else "w"
