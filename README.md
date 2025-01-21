@@ -1,79 +1,173 @@
-#Team members
+Chess Game 
 
-Ipek Zobu, Student ID: 30971700
-Ada Alkim Acikyol, Student ID: 28576498
-Mehlika Rana Akbay, Student ID: 51259883
+This project is an enhanced chess game implemented in Python 3.13 using the Pygame library. It features a user-friendly graphical interface and implements key chess rules, including movement validation, check, checkmate, and stalemate detection. The game provides a visually engaging experience with additional features like captured pieces display and move history. 
 
-# Chess Game
+ 
 
-This project is a simplified chess game implemented in Python 3.13 using the Pygame library. It includes a graphical user interface and implements basic chess rules, such as piece movement validation, check, and checkmate detection.
+Team Members 
 
-## Prerequisites
+Ipek Zobu, Student ID: 30971700  
 
-Ensure you have the following installed on your system:
+Ada Alkim Acikyol, Student ID: 28576498  
 
-- **Python 3.13**
-- **Pygame library**
+Mehlika Rana Akbay, Student ID: 51259883 
 
-You can install Pygame by running:
+ 
 
-```bash
-pip install pygame
-```
+Prerequisites 
 
-## Running the Game
+Ensure you have the following installed on your system: 
 
-1. Download or clone the project files, ensuring the `assets` folder containing the following image files is in the same directory as the Python script:
-   - `wP.png` (White Pawn)
-   - `wR.png` (White Rook)
-   - `wN.png` (White Knight)
-   - `wB.png` (White Bishop)
-   - `wQ.png` (White Queen)
-   - `wK.png` (White King)
-   - `bP.png` (Black Pawn)
-   - `bR.png` (Black Rook)
-   - `bN.png` (Black Knight)
-   - `bB.png` (Black Bishop)
-   - `bQ.png` (Black Queen)
-   - `bK.png` (Black King)
+Python 3.13  
 
-2. Open a terminal and navigate to the project directory.
+Pygame library 
 
-3. Run the script using the following command:
+To install Pygame, run: 
 
-```bash
-python main.py
-```
+pip install pygame 
+  
 
-## Gameplay Instructions
+ 
 
-- The game starts with White's turn.
-- Click on a piece to select it. The selected piece will display a highlight border.
-- Click on a valid square to move the selected piece.
-- Invalid moves are ignored.
-- The game enforces chess rules, including:
-  - Legal piece movements
-  - Check detection
-  - Checkmate detection
-- The game ends when:
-  - A player is checkmated.
-  - A king is captured.
+How to Run 
 
-## Features
+Download or clone the project files, ensuring the assets folder contains the following image files: 
 
-- Graphical user interface with an updated color scheme for the chessboard.
-- Real-time highlighting of squares under the mouse pointer.
-- Enforcement of basic chess rules (e.g., piece-specific movement, check, and checkmate).
-- Immediate detection of game-ending conditions such as checkmate or king capture.
+wP.png (White Pawn) 
 
-## Assumptions Made
+wR.png (White Rook) 
 
-- Only basic chess rules are implemented; advanced rules such as castling, en passant, and pawn promotion are not included.
-- The board highlights the square under the mouse pointer.
-- Piece movement logic is strictly enforced for pawns, knights, bishops, rooks, queens, and kings.
+wN.png (White Knight) 
 
-## Notes
+wB.png (White Bishop) 
 
-- The game does not support saving or resuming matches.
-- The design focuses on simplicity and functionality.
-- Ensure Python 3.13 is used, as compatibility with other versions is not guaranteed.
+wQ.png (White Queen) 
+
+wK.png (White King) 
+
+bP.png (Black Pawn) 
+
+bR.png (Black Rook) 
+
+bN.png (Black Knight) 
+
+bB.png (Black Bishop) 
+
+bQ.png (Black Queen) 
+
+bK.png (Black King) 
+
+Open a terminal and navigate to the project directory. 
+
+Run the game with: 
+
+python main.py 
+  
+
+ 
+
+Gameplay Instructions 
+
+The game starts with White's turn.  
+
+Selecting Pieces: 
+
+Click on a piece to select it. Valid moves will be highlighted.  
+
+Click on a highlighted square to move the piece. 
+
+Turn Management: 
+
+Turns alternate between White and Black players. 
+
+Rules Enforced: 
+
+Legal movement validation for all pieces.  
+
+Detection of check, checkmate, and stalemate. 
+
+The game ends when: 
+
+A checkmate occurs. 
+
+A stalemate occurs.  
+
+A player resigns or manually exits. 
+
+ 
+
+Features 
+
+New Enhancements 
+
+Graphical Interface Improvements: 
+
+A larger game screen (1000x800) with a sidebar for additional game details. 
+
+Sidebar includes: 
+
+Captured Pieces Display: Shows captured pieces for both players. 
+
+Current Turn Display: Highlights whose turn it is. 
+
+Real-Time Highlights: 
+
+Valid moves are visually highlighted for the selected piece. 
+
+The king is highlighted in red when in check. 
+
+Game State Management: 
+
+Detection and handling of check, checkmate, and stalemate. 
+
+Prevents moves that place the king in check. 
+
+Move History: 
+
+Displays the last 10 moves for quick reference. 
+
+Core Features 
+
+Accurate Movement Logic: 
+
+Handles specific movements for pawns, rooks, bishops, knights, queens, and kings. 
+
+Prevents illegal moves and self-check. 
+
+User-Friendly Design: 
+
+Mouse hover effects on squares. 
+
+Clear messages for game-ending scenarios. 
+
+ 
+
+Assumptions and Limitations 
+
+Rules Implemented: 
+
+Basic chess rules are enforced. 
+
+Advanced rules such as castling, en passant, and pawn promotion are not yet implemented. 
+
+Game Save/Resume: Not currently supported. 
+
+Compatibility: Designed for Python 3.13. Other versions may not work correctly. 
+
+ 
+
+Future Enhancements 
+
+The project can be further expanded with the following features: 
+
+Implementation of advanced chess rules (e.g., castling, en passant). 
+
+Save/load functionality to resume games. 
+
+Multiplayer support over a network or local hotseat mode. 
+
+ 
+
+Acknowledgments 
+
+This project is the result of a collaborative effort and serves as an educational exploration of Python, Pygame, and chess logic implementation. 
